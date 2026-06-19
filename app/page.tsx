@@ -152,8 +152,7 @@ export default function Home() {
   const [time, setTime] = useState<number>(0);
   const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
   
-  // Active projection in the cinema screen
-  const [activeImagePath, setActiveImagePath] = useState<string>("/1.jpg.jpeg");
+  // Subtitle poetry feed
   const [subtitle, setSubtitle] = useState<{ fr: string; es: string; speaker: string }>({
     fr: "« Tu n'as rien vu à Hiroshima. Rien. »",
     es: "« No has visto nada en Hiroshima. Nada. »",
@@ -187,53 +186,43 @@ export default function Home() {
     const now = ctx.currentTime;
 
     if (type === "click") {
-      // Film reel click
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "triangle";
       osc.frequency.setValueAtTime(140, now);
       osc.frequency.exponentialRampToValueAtTime(30, now + 0.07);
-      
       gain.gain.setValueAtTime(0.25, now);
       gain.gain.linearRampToValueAtTime(0, now + 0.07);
-      
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.07);
     } else if (type === "countdown") {
-      // Retro sine beep
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(950, now);
-      
       gain.gain.setValueAtTime(0.15, now);
       gain.gain.linearRampToValueAtTime(0, now + 0.12);
-      
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.12);
     } else if (type === "match") {
-      // major seventh piano chord representing union
       const notes = [261.63, 329.63, 392.00, 493.88]; // Cmaj7
       notes.forEach((freq, index) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
         osc.frequency.setValueAtTime(freq, now + index * 0.04);
-        
         gain.gain.setValueAtTime(0.12, now + index * 0.04);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9 + index * 0.04);
-        
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now + index * 0.04);
         osc.stop(now + 1.2);
       });
     } else if (type === "error") {
-      // low tone representing forgetfulness/separation
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -241,35 +230,28 @@ export default function Home() {
       osc1.frequency.setValueAtTime(80, now);
       osc2.type = "sine";
       osc2.frequency.setValueAtTime(81.5, now);
-      
       gain.gain.setValueAtTime(0.18, now);
       gain.gain.linearRampToValueAtTime(0, now + 0.45);
-      
       const filter = ctx.createBiquadFilter();
       filter.type = "lowpass";
       filter.frequency.setValueAtTime(200, now);
-      
       osc1.connect(filter);
       osc2.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
-      
       osc1.start(now);
       osc2.start(now);
       osc1.stop(now + 0.45);
       osc2.stop(now + 0.45);
     } else if (type === "win") {
-      // cinematic ascending cascade
       const scale = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
       scale.forEach((freq, index) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "triangle";
         osc.frequency.setValueAtTime(freq, now + index * 0.1);
-        
         gain.gain.setValueAtTime(0.1, now + index * 0.1);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0 + index * 0.08);
-        
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start(now + index * 0.1);
@@ -322,10 +304,9 @@ export default function Home() {
     setTurns(0);
     setMismatches(0);
     setTime(0);
-    setActiveImagePath("/1.jpg.jpeg");
     setSubtitle({
-      fr: "« Commençons la recherche des paires oubliées. »",
-      es: "« Comencemos la búsqueda de los pares olvidados. »",
+      fr: "« Commençons la recherche des fragments de notre mémoire. »",
+      es: "« Comencemos la búsqueda de los fragmentos de nuestra memoria. »",
       speaker: "Elle"
     });
     
@@ -394,15 +375,13 @@ export default function Home() {
 
     playSynthSound("click");
 
-    // Flip card
     const updatedCards = [...cards];
     updatedCards[index].isFlipped = true;
     setCards(updatedCards);
 
-    // Project card scene image to screen immediately
+    // Update poetry box with flipped card quote
     const scene = SCENES.find(s => s.id === cards[index].sceneId);
     if (scene) {
-      setActiveImagePath(scene.imagePath);
       setSubtitle({
         fr: scene.quoteFr,
         es: scene.quoteEs,
@@ -430,7 +409,6 @@ export default function Home() {
           setSelectedCards([]);
           playSynthSound("match");
 
-          // Display the match narrative on the screen
           const theme = getMatchTheme(id1, id2);
           if (theme) {
             setSubtitle({
@@ -441,7 +419,7 @@ export default function Home() {
           }
         }, 600);
       } else {
-        // MISMATCH (Forgetfulness error)
+        // MISMATCH
         setMismatches((prev) => prev + 1);
         setTimeout(() => {
           const resetCards = [...cards];
@@ -451,7 +429,6 @@ export default function Home() {
           setSelectedCards([]);
           playSynthSound("error");
 
-          // Show a poetic text about forgetting
           const errorQuotes = [
             { fr: "« De même que dans l'amour cette illusion existe, celle de ne jamais oublier... »", es: "« Al igual que en el amor existe esa ilusión, la de nunca poder olvidar... »", speaker: "Elle" },
             { fr: "« Comme toi, je connais l'oubli. / Non, tu ne connais pas l'oubli. »", es: "« Como tú, conozco el olvido. / No, tú no conoces el olvido. »", speaker: "Elle & Lui" },
@@ -487,320 +464,283 @@ export default function Home() {
   };
 
   return (
-    <main className="flex-1 w-full bg-charcoal-900 flex justify-center items-center p-0 z-10 relative md:h-screen md:w-screen md:overflow-hidden">
-      {/* Cinematic Viewport Container (Responsive split layout) */}
-      <div className="w-full min-h-screen md:min-h-0 md:h-screen md:w-screen bg-cream-50 relative overflow-hidden flex flex-col md:flex-row font-serif">
+    <main className="flex-1 w-full bg-cream-50 flex flex-col justify-between items-center p-4 sm:p-6 md:p-8 z-10 min-h-screen md:h-screen md:overflow-hidden font-serif">
+      
+      {/* HEADER SECTION */}
+      <div className="w-full max-w-5xl text-center space-y-1 py-2 md:py-4">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-widest text-charcoal-900 uppercase">
+          HIROSHIMA <span className="text-hiroshima-500 italic font-medium normal-case tracking-normal">mon amour</span>
+        </h1>
+        <div className="red-line w-24 mx-auto my-2" />
+        <p className="text-[10px] md:text-xs uppercase tracking-widest text-charcoal-900/60 font-typewriter">
+          Un jeu de la mémoire et de l&apos;oubli
+        </p>
+      </div>
+
+      {/* MAIN GAME CONTAINER (Intro, Countdown, Grid, or Victory) */}
+      <div className="w-full max-w-5xl flex-1 flex flex-col justify-center items-center py-4 md:py-6">
         
-        {/* LEFT PANEL: Cinema Projector Screen (65% width on Desktop, Top on Mobile) */}
-        <div className="w-full md:w-[65%] bg-charcoal-900 border-b md:border-b-0 md:border-r border-charcoal-800 flex flex-col justify-between p-4 sm:p-6 md:p-8 min-h-[350px] md:min-h-0 md:h-full relative z-20">
-          {/* Cinema Header */}
-          <div className="flex justify-between items-center text-xs tracking-widest text-hiroshima-500 font-typewriter uppercase">
-            <span>Projection</span>
-            <span className="animate-pulse">● PLAYING</span>
-          </div>
-
-          {/* Projector screen display */}
-          <div className="my-auto flex flex-col items-center justify-center py-4 md:py-6">
-            {gameState === "intro" && (
-              <div className="text-center py-6 px-4 space-y-4 max-w-md">
-                <div className="w-12 h-12 rounded-full bg-hiroshima-500 mx-auto animate-pulse flex items-center justify-center">
-                  <span className="text-white text-xs font-typewriter tracking-widest pl-0.5">REC</span>
-                </div>
-                <div className="space-y-2">
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white uppercase">HIROSHIMA</h1>
-                  <p className="text-lg md:text-xl italic text-hiroshima-400 tracking-wider">mon amour</p>
-                  <div className="red-line w-24 mx-auto my-3" />
-                  <p className="text-xs md:text-sm uppercase tracking-widest text-cream-300/60 font-typewriter">Un jeu de la mémoire et de l&apos;oubli</p>
-                </div>
-                <p className="text-sm md:text-base text-cream-200/80 leading-relaxed font-sans">
-                  Una experiencia de memoria no-idéntica. Empareja los fragmentos correspondientes: el museo y la ceniza (1-2), la enfermedad y la hierba (3-4), el amor y el sótano (5-6), los nombres de las heridas (7-8).
-                </p>
+        {/* INTRO SCREEN */}
+        {gameState === "intro" && (
+          <div className="w-full max-w-3xl bg-cream-100 border border-cream-300 rounded-3xl p-6 sm:p-10 flex flex-col justify-between items-center shadow-xl space-y-6">
+            <div className="text-center max-w-md space-y-4">
+              <div className="w-12 h-12 rounded-full bg-hiroshima-500 mx-auto animate-pulse flex items-center justify-center">
+                <span className="text-white text-xs font-typewriter tracking-widest pl-0.5 font-bold">REC</span>
               </div>
-            )}
-
-            {gameState === "countdown" && (
-              <div className="relative w-40 h-40 rounded-full bg-cream-100 text-charcoal-900 flex items-center justify-center text-6xl font-bold font-typewriter shadow-inner">
-                {countdownNum}
-                <div className="absolute inset-0 rounded-full border-2 border-hiroshima-500 animate-ping opacity-60" />
-              </div>
-            )}
-
-            {(gameState === "playing" || gameState === "ended") && (
-              <div className="w-full max-w-2xl md:max-w-4xl aspect-[16/10] md:max-h-[52vh] bg-black border border-charcoal-800 rounded relative overflow-hidden group shadow-lg transition-all duration-300">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={activeImagePath}
-                  alt="Proyección Celuloide"
-                  className="w-full h-full object-cover grayscale brightness-90 contrast-110 transition-transform duration-700"
-                />
-                
-                {/* Red flash effect on matches */}
-                {gameState === "ended" && (
-                  <div className="absolute inset-0 bg-hiroshima-500/10 border-2 border-hiroshima-500 animate-pulse" />
-                )}
-                
-                <div className="absolute bottom-1 right-2 text-[8px] bg-charcoal-900/80 px-2 py-0.5 rounded text-cream-300 font-typewriter tracking-widest">
-                  {SCENES.find(s => s.imagePath === activeImagePath)?.location.toUpperCase()}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Subtitles Cinema Box */}
-          <div className="bg-black/90 border border-charcoal-800 p-4 md:p-6 rounded min-h-[110px] md:min-h-[140px] flex flex-col justify-center relative">
-            <span className="absolute top-1.5 left-3 text-[9px] md:text-[11px] uppercase tracking-wider text-hiroshima-400 font-typewriter font-bold">
-              Sub-titres // {subtitle.speaker}
-            </span>
-            <div className="space-y-2 text-center mt-3 px-2">
-              <p className="text-sm md:text-lg lg:text-xl font-typewriter text-cream-100 italic leading-relaxed font-semibold">
-                {subtitle.fr}
-              </p>
-              <p className="text-xs md:text-sm lg:text-base text-cream-300 font-sans tracking-wide">
-                {subtitle.es}
+              <p className="text-sm md:text-base text-charcoal-900/80 leading-relaxed font-sans">
+                Empareja los fragmentos correspondientes: el museo y la ceniza (1-2), la enfermedad y la hierba (3-4), el amor y el sótano (5-6), los nombres de las heridas (7-8).
               </p>
             </div>
-          </div>
-        </div>
 
-        {/* RIGHT PANEL: Control Board & Card Grid (35% width on Desktop, Bottom on Mobile) */}
-        <div className="w-full md:w-[35%] bg-cream-100 flex flex-col justify-between p-4 sm:p-6 md:p-8 md:h-full z-20 md:overflow-y-auto">
-          
-          {/* INTRO PHASE ACTION PANEL */}
-          {gameState === "intro" && (
-            <div className="flex-1 flex flex-col justify-between text-center py-6 px-4">
-              <div className="my-auto space-y-6">
-                <div className="bg-cream-200 border border-cream-300 py-6 px-5 rounded text-charcoal-900/90 shadow-sm">
-                  <p className="text-sm tracking-widest font-typewriter text-hiroshima-500 uppercase font-bold mb-3">Reglas de Asociación</p>
-                  <ul className="text-left text-xs md:text-sm font-sans space-y-3 list-disc list-inside leading-relaxed">
-                    <li>La imagen <strong>1</strong> hace par con la <strong>2</strong> (Museo e Intimidad).</li>
-                    <li>La imagen <strong>3</strong> hace par con la <strong>4</strong> (Dolor y Renacimiento).</li>
-                    <li>La imagen <strong>5</strong> hace par con la <strong>6</strong> (Piel y Sótano de Nevers).</li>
-                    <li>La imagen <strong>7</strong> hace par con la <strong>8</strong> (Encuentro y Despedida).</li>
-                  </ul>
-                </div>
-                
-                <p className="text-xs md:text-sm text-charcoal-900/70 leading-relaxed max-w-sm mx-auto">
-                  La memoria no duplica. Conecta los recuerdos complementarios para revivir la poesía fílmica.
-                </p>
+            <div className="w-full bg-cream-200 border border-cream-300 py-6 px-6 rounded-2xl text-charcoal-900/90 max-w-xl">
+              <p className="text-sm tracking-widest font-typewriter text-hiroshima-500 uppercase font-bold mb-3 text-center">Reglas de Asociación</p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-left text-xs md:text-sm font-sans list-disc list-inside leading-relaxed">
+                <li>Imagen <strong>1</strong> con <strong>2</strong> (Museo e Intimidad).</li>
+                <li>Imagen <strong>3</strong> con <strong>4</strong> (Dolor y Renacimiento).</li>
+                <li>Imagen <strong>5</strong> con <strong>6</strong> (Piel y Nevers).</li>
+                <li>Imagen <strong>7</strong> con <strong>8</strong> (Encuentro y Despedida).</li>
+              </ul>
+            </div>
+
+            <button
+              id="start-game-btn"
+              onClick={initializeGame}
+              className="w-full max-w-md py-4 bg-hiroshima-500 hover:bg-hiroshima-600 active:bg-hiroshima-700 text-white uppercase text-xs md:text-sm tracking-widest font-bold rounded-xl shadow-md transition-all duration-300 transform active:scale-95"
+            >
+              Iniciar la memoria
+            </button>
+          </div>
+        )}
+
+        {/* COUNTDOWN SCREEN */}
+        {gameState === "countdown" && (
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="relative w-44 h-44 rounded-full bg-cream-100 text-charcoal-900 flex items-center justify-center text-7xl font-bold font-typewriter shadow-inner border border-cream-300">
+              {countdownNum}
+              <div className="absolute inset-0 rounded-full border-2 border-hiroshima-500 animate-ping opacity-60" />
+            </div>
+            <p className="text-xs md:text-sm text-charcoal-900/50 uppercase tracking-widest font-typewriter">
+              Alineando película...
+            </p>
+          </div>
+        )}
+
+        {/* PLAYING GRID */}
+        {gameState === "playing" && (
+          <div className="w-full flex flex-col justify-between items-center space-y-6">
+            
+            {/* Score dashboard */}
+            <div className="grid grid-cols-3 gap-4 sm:gap-6 text-center w-full max-w-xl">
+              <div className="bg-cream-100 p-3 rounded-xl border border-cream-300 flex flex-col justify-center shadow-sm">
+                <span className="text-[10px] md:text-xs tracking-wider text-charcoal-900/60 uppercase font-typewriter font-semibold mb-1">Asociación</span>
+                <span className="text-lg md:text-2xl font-bold text-hiroshima-500 font-typewriter">{matches} / 4</span>
               </div>
+              <div className="bg-cream-100 p-3 rounded-xl border border-cream-300 flex flex-col justify-center shadow-sm">
+                <span className="text-[10px] md:text-xs tracking-wider text-charcoal-900/60 uppercase font-typewriter font-semibold mb-1">Olvidos</span>
+                <span className="text-lg md:text-2xl font-bold text-charcoal-900 font-typewriter">{mismatches}</span>
+              </div>
+              <div className="bg-cream-100 p-3 rounded-xl border border-cream-300 flex flex-col justify-center shadow-sm">
+                <span className="text-[10px] md:text-xs tracking-wider text-charcoal-900/60 uppercase font-typewriter font-semibold mb-1">Temps</span>
+                <span className="text-lg md:text-2xl font-bold text-charcoal-900 font-typewriter">{formatTime(time)}</span>
+              </div>
+            </div>
+
+            {/* Memory Cards Grid (4 columns, 2 rows, landscape aspect ratio for maximum scale) */}
+            <div className="w-full flex justify-center items-center py-2">
+              <div className="grid grid-cols-4 gap-4 md:gap-6 w-full max-w-4xl px-2">
+                {cards.map((card, index) => (
+                  <div
+                    key={card.uniqueId}
+                    id={`card-${index}`}
+                    onClick={() => handleCardClick(index)}
+                    className="card-container aspect-[4/3] cursor-pointer"
+                  >
+                    <div className={`card-inner h-full w-full relative ${card.isFlipped || card.isMatched ? "card-flipped" : ""}`}>
+                      
+                      {/* CARD BACK (Designed like a 35mm film frame) */}
+                      <div className="card-back absolute inset-0 bg-white flex items-center justify-between p-2 border border-cream-300 rounded-xl shadow-md hover:shadow-lg hover:border-hiroshima-500/50 transition-all duration-300 overflow-hidden">
+                        
+                        {/* Film Sprocket Strip (Left) */}
+                        <div className="h-full flex flex-col justify-between py-1 opacity-40">
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                        </div>
+                        
+                        {/* Core Japanese Hinomaru Emblem */}
+                        <div className="w-10 h-10 rounded-full border-2 border-hiroshima-500 flex items-center justify-center relative">
+                          <div className="w-5 h-5 rounded-full bg-hiroshima-500" />
+                        </div>
+
+                        {/* Film Sprocket Strip (Right) */}
+                        <div className="h-full flex flex-col justify-between py-1 opacity-40">
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                          <div className="w-2 h-1 bg-charcoal-900 rounded-sm" />
+                        </div>
+                      </div>
+
+                      {/* CARD FRONT (Full landscape movie scene) */}
+                      <div className={`card-front absolute inset-0 bg-black border rounded-xl overflow-hidden shadow-md flex items-center justify-center ${card.isMatched ? "border-hiroshima-500" : "border-charcoal-900"}`}>
+                        <div className="relative w-full h-full">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={card.imagePath}
+                            alt={`Scène ${card.sceneId}`}
+                            className="w-full h-full object-cover grayscale brightness-95 contrast-105"
+                          />
+                          {card.isMatched && (
+                            <div className="absolute inset-0 bg-hiroshima-500/15 flex items-center justify-center">
+                              <div className="bg-hiroshima-500 text-white text-[9px] font-typewriter px-2 py-0.5 uppercase tracking-widest rounded">
+                                PAIRE
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Restart & Mute footer */}
+            <div className="w-full max-w-xl pt-2 flex justify-between items-center border-t border-cream-300">
+              <button
+                id="reset-btn"
+                onClick={initializeGame}
+                className="py-2 px-4 border border-charcoal-900/20 text-charcoal-900/80 hover:bg-cream-200 text-xs font-typewriter uppercase tracking-widest rounded-lg transition-colors"
+              >
+                Reiniciar juego
+              </button>
 
               <button
-                id="start-game-btn"
-                onClick={initializeGame}
-                className="w-full py-4 bg-hiroshima-500 hover:bg-hiroshima-600 active:bg-hiroshima-700 text-white uppercase text-xs md:text-sm tracking-widest font-bold rounded shadow-md transition-all duration-300 transform active:scale-95 mt-6"
+                id="audio-toggle-btn"
+                onClick={() => setAudioEnabled(!audioEnabled)}
+                className="p-2 text-charcoal-900/60 hover:text-hiroshima-500 transition-colors"
+                title={audioEnabled ? "Silenciar audio" : "Activar audio"}
               >
-                Iniciar la memoria
+                {audioEnabled ? (
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5 2.27L7 9.5H3v5h4l4.5 4v-13z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM4.34 2.93L2.93 4.34 7.29 8.7H3v6.6h4.4L12 19.7v-6.6l4.69 4.69c-.69.53-1.46.95-2.3 1.23v2.03c1.38-.3 2.63-.95 3.68-1.81l2.62 2.62 1.41-1.41L4.34 2.93zM12 4.3L9.89 6.41 12 8.52V4.3z" />
+                  </svg>
+                )}
               </button>
             </div>
-          )}
 
-          {/* COUNTDOWN INTERMEDIARY PANEL */}
-          {gameState === "countdown" && (
-            <div className="flex-1 flex flex-col justify-center items-center text-center">
-              <span className="text-[10px] uppercase tracking-widest font-typewriter text-charcoal-900/60 mb-2">
-                Alineando Proyector
+          </div>
+        )}
+
+        {/* GAME ENDED SCREEN */}
+        {gameState === "ended" && (
+          <div className="w-full max-w-3xl bg-cream-100 border border-cream-300 rounded-3xl p-6 sm:p-10 flex flex-col justify-between items-center shadow-xl space-y-6">
+            <div className="text-center">
+              <span className="text-xs tracking-widest font-typewriter text-hiroshima-500 uppercase font-semibold">
+                Bilan de la Mémoire
               </span>
-              <p className="text-xs text-charcoal-900/50 max-w-[200px] leading-relaxed">
-                El celuloide de la memoria está a punto de rodar...
+              <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-wide text-charcoal-900 mt-1">
+                Fin del Celuloide
+              </h2>
+            </div>
+
+            {/* Score & poetics evaluation */}
+            <div className="bg-cream-200 border border-cream-300 p-5 rounded-2xl text-center space-y-3 w-full max-w-xl shadow-sm">
+              <span className="text-md md:text-lg uppercase tracking-widest text-hiroshima-600 font-typewriter block font-bold">
+                {getMemoryEvaluation().title}
+              </span>
+              <p className="text-xs md:text-sm text-charcoal-900/80 leading-relaxed font-sans px-1">
+                {getMemoryEvaluation().desc}
+              </p>
+              
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-cream-300 text-left font-typewriter text-xs md:text-sm text-charcoal-900/70">
+                <div>• Intentos: <span className="text-charcoal-900 font-bold">{turns}</span></div>
+                <div>• Olvidos: <span className="text-hiroshima-500 font-bold">{mismatches}</span></div>
+                <div className="col-span-2">• Duración: <span className="text-charcoal-900 font-bold">{formatTime(time)}</span></div>
+              </div>
+            </div>
+
+            {/* Gallery review of pairs */}
+            <div className="w-full max-w-xl space-y-2">
+              <span className="text-[10px] md:text-xs uppercase tracking-wider text-charcoal-900/60 font-typewriter block text-center font-bold">
+                — Le Musée de la Mémoire (Revisión de Pares) —
+              </span>
+              
+              <div className="grid grid-cols-4 gap-3 bg-cream-200/50 p-3 rounded-xl border border-cream-200">
+                {MATCH_THEMES.map((theme) => (
+                  <div
+                    key={theme.pairId}
+                    className="relative aspect-video rounded-lg overflow-hidden border border-cream-300 cursor-pointer hover:border-hiroshima-500 transition-all duration-300"
+                    title={theme.title}
+                    onClick={() => {
+                      playSynthSound("click");
+                      setSubtitle({
+                        fr: theme.quoteFr,
+                        es: theme.quoteEs,
+                        speaker: theme.speaker
+                      });
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/${theme.pairId * 2 - 1}.jpg.jpeg`}
+                      alt={theme.title}
+                      className="w-full h-full object-cover grayscale brightness-75 hover:brightness-100"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-center text-charcoal-900/40 italic font-typewriter">
+                Haz clic en los pares para proyectar sus diálogos en el cine.
               </p>
             </div>
-          )}
 
-          {/* PLAYING PHASE PANEL (Cards board) */}
-          {gameState === "playing" && (
-            <div className="flex-1 flex flex-col justify-between">
+            <div className="w-full max-w-md space-y-3">
+              <button
+                id="restart-game-btn"
+                onClick={initializeGame}
+                className="w-full py-4 bg-hiroshima-500 hover:bg-hiroshima-600 active:bg-hiroshima-700 text-white uppercase text-xs md:text-sm tracking-widest font-bold rounded-xl shadow-md transition-all duration-300"
+              >
+                Reconstruir el Recuerdo
+              </button>
               
-              {/* Score dashboard */}
-              <div className="grid grid-cols-3 gap-3 text-center mb-6">
-                <div className="bg-cream-200 p-3 rounded border border-cream-300 flex flex-col justify-center">
-                  <span className="text-[10px] md:text-xs tracking-wider text-charcoal-900/60 uppercase font-typewriter font-semibold mb-1">Asociación</span>
-                  <span className="text-lg md:text-2xl font-bold text-hiroshima-500 font-typewriter">{matches} / 4</span>
-                </div>
-                <div className="bg-cream-200 p-3 rounded border border-cream-300 flex flex-col justify-center">
-                  <span className="text-[10px] md:text-xs tracking-wider text-charcoal-900/60 uppercase font-typewriter font-semibold mb-1">Olvidos</span>
-                  <span className="text-lg md:text-2xl font-bold text-charcoal-900 font-typewriter">{mismatches}</span>
-                </div>
-                <div className="bg-cream-200 p-3 rounded border border-cream-300 flex flex-col justify-center">
-                  <span className="text-[10px] md:text-xs tracking-wider text-charcoal-900/60 uppercase font-typewriter font-semibold mb-1">Temps</span>
-                  <span className="text-lg md:text-2xl font-bold text-charcoal-900 font-typewriter">{formatTime(time)}</span>
-                </div>
-              </div>
-
-              {/* Memory Cards Grid (4x2 on mobile, 2x4 on desktop) */}
-              <div className="my-auto flex justify-center items-center py-2 md:py-4">
-                <div className="grid grid-cols-4 md:grid-cols-2 gap-3 md:gap-4 w-full max-w-sm md:max-w-[280px]">
-                  {cards.map((card, index) => (
-                    <div
-                      key={card.uniqueId}
-                      id={`card-${index}`}
-                      onClick={() => handleCardClick(index)}
-                      className="card-container aspect-[3/4] cursor-pointer"
-                    >
-                      <div className={`card-inner h-full w-full relative ${card.isFlipped || card.isMatched ? "card-flipped" : ""}`}>
-                        {/* Card Back */}
-                        <div className="card-back absolute inset-0 flex flex-col justify-between items-center p-2 border border-cream-300 rounded shadow-sm hover:shadow-md hover:border-hiroshima-500/50 transition-all duration-300">
-                          <div className="w-full flex justify-between px-1 opacity-45">
-                            <div className="w-1.5 h-1.5 border border-hiroshima-500 rounded-full" />
-                            <div className="w-1.5 h-1.5 border border-hiroshima-500 rounded-full" />
-                          </div>
-                          
-                          <div className="w-7 h-7 rounded-full border border-hiroshima-500 flex items-center justify-center relative">
-                            <div className="w-3.5 h-3.5 rounded-full bg-hiroshima-500" />
-                          </div>
-
-                          <span className="text-[7px] uppercase tracking-widest text-hiroshima-500 font-typewriter font-bold rotate-180">
-                            MEMO
-                          </span>
-                        </div>
-
-                        {/* Card Front */}
-                        <div className={`card-front absolute inset-0 bg-white border rounded overflow-hidden shadow-md flex items-center justify-center ${card.isMatched ? "border-hiroshima-500" : "border-charcoal-900"}`}>
-                          <div className="relative w-full h-full">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={card.imagePath}
-                              alt={`Scène ${card.sceneId}`}
-                              className="w-full h-full object-cover grayscale brightness-95 contrast-105"
-                            />
-                            {card.isMatched && (
-                              <div className="absolute inset-0 bg-hiroshima-500/10 flex items-center justify-center">
-                                <div className="absolute top-0 right-0 bg-hiroshima-500 text-white text-[7px] font-typewriter px-1 py-0.5 uppercase tracking-widest">
-                                  PAIR
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action buttons footer */}
-              <div className="mt-4 pt-3 border-t border-cream-300 flex justify-between items-center">
-                <button
-                  id="reset-btn"
-                  onClick={initializeGame}
-                  className="py-1.5 px-3 border border-charcoal-900/20 text-charcoal-900/80 hover:bg-cream-200 text-[10px] font-typewriter uppercase tracking-widest rounded transition-colors"
-                >
-                  Reiniciar
-                </button>
-
-                <button
-                  id="audio-toggle-btn"
-                  onClick={() => setAudioEnabled(!audioEnabled)}
-                  className="p-1.5 text-charcoal-900/60 hover:text-hiroshima-500 transition-colors"
-                  title={audioEnabled ? "Silenciar audio" : "Activar audio"}
-                >
-                  {audioEnabled ? (
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                      <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77zm-2.5 2.27L7 9.5H3v5h4l4.5 4v-13z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM4.34 2.93L2.93 4.34 7.29 8.7H3v6.6h4.4L12 19.7v-6.6l4.69 4.69c-.69.53-1.46.95-2.3 1.23v2.03c1.38-.3 2.63-.95 3.68-1.81l2.62 2.62 1.41-1.41L4.34 2.93zM12 4.3L9.89 6.41 12 8.52V4.3z" />
-                    </svg>
-                  )}
-                </button>
-              </div>
+              <button
+                id="back-intro-btn"
+                onClick={() => {
+                  playSynthSound("click");
+                  setGameState("intro");
+                }}
+                className="w-full py-2.5 border border-charcoal-900/20 hover:bg-cream-200 text-charcoal-900/70 uppercase text-[10px] tracking-widest rounded-xl transition-colors"
+              >
+                Volver al Inicio
+              </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* ENDED PHASE ACTION PANEL (Game over & final review) */}
-          {gameState === "ended" && (
-            <div className="flex-1 flex flex-col justify-between overflow-y-auto scrollbar-thin py-2">
-              <div className="space-y-4">
-                <div className="text-center">
-                  <span className="text-xs tracking-widest font-typewriter text-hiroshima-500 uppercase font-semibold">
-                    Bilan de la Mémoire
-                  </span>
-                  <h2 className="text-3xl font-bold uppercase tracking-wide text-charcoal-900 mt-1">
-                    Fin del Celuloide
-                  </h2>
-                </div>
+      </div>
 
-                {/* Score & Evaluation */}
-                <div className="bg-cream-200 border border-cream-300 p-4 rounded text-center space-y-3 shadow-sm">
-                  <span className="text-sm md:text-base uppercase tracking-widest text-hiroshima-600 font-typewriter block font-bold">
-                    {getMemoryEvaluation().title}
-                  </span>
-                  <p className="text-xs md:text-sm text-charcoal-900/80 leading-relaxed font-sans px-1">
-                    {getMemoryEvaluation().desc}
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-cream-300 text-left font-typewriter text-xs text-charcoal-900/70">
-                    <div>• Intentos: <span className="text-charcoal-900 font-bold">{turns}</span></div>
-                    <div>• Olvidos: <span className="text-hiroshima-500 font-bold">{mismatches}</span></div>
-                    <div className="col-span-2">• Duración: <span className="text-charcoal-900 font-bold">{formatTime(time)}</span></div>
-                  </div>
-                </div>
-
-                {/* Matched Pairs Interactive Reviewer */}
-                <div className="space-y-1">
-                  <span className="text-[9px] uppercase tracking-wider text-charcoal-900/60 font-typewriter block text-center font-semibold">
-                    — Le Musée de la Mémoire (Revisión de Pares) —
-                  </span>
-                  
-                  <div className="grid grid-cols-4 gap-1.5 bg-cream-200/50 p-1.5 rounded border border-cream-200 max-h-[100px] overflow-y-auto">
-                    {MATCH_THEMES.map((theme) => (
-                      <div
-                        key={theme.pairId}
-                        className="relative aspect-video rounded overflow-hidden border border-cream-300 cursor-pointer hover:border-hiroshima-500 transition-all duration-300"
-                        title={theme.title}
-                        onClick={() => {
-                          playSynthSound("click");
-                          // Project one of the images of the pair
-                          const imageNum = theme.pairId * 2 - 1;
-                          setActiveImagePath(`/${imageNum}.jpg.jpeg`);
-                          setSubtitle({
-                            fr: theme.quoteFr,
-                            es: theme.quoteEs,
-                            speaker: theme.speaker
-                          });
-                        }}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`/${theme.pairId * 2 - 1}.jpg.jpeg`}
-                          alt={theme.title}
-                          className="w-full h-full object-cover grayscale brightness-75 hover:brightness-100"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-[8px] text-center text-charcoal-900/40 italic font-typewriter">
-                    Haz clic en los pares para proyectar sus diálogos en el cine.
-                  </p>
-                </div>
-              </div>
-
-              {/* Ending actions */}
-              <div className="space-y-2 pt-3 border-t border-cream-300">
-                <button
-                  id="restart-game-btn"
-                  onClick={initializeGame}
-                  className="w-full py-3 bg-hiroshima-500 hover:bg-hiroshima-600 active:bg-hiroshima-700 text-white uppercase text-xs tracking-widest font-semibold rounded shadow-md transition-all duration-300"
-                >
-                  Reconstruir el Recuerdo
-                </button>
-                
-                <button
-                  id="back-intro-btn"
-                  onClick={() => {
-                    playSynthSound("click");
-                    setGameState("intro");
-                  }}
-                  className="w-full py-2 border border-charcoal-900/20 hover:bg-cream-200 text-charcoal-900/70 uppercase text-[9px] tracking-widest rounded transition-colors"
-                >
-                  Volver al Inicio
-                </button>
-              </div>
-            </div>
-          )}
-
+      {/* POETIC SUBTITLES CINEMATIC OVERLAY BAR (Bottom) */}
+      <div className="w-full max-w-4xl bg-black/90 border border-charcoal-800 p-4 md:p-6 rounded-2xl min-h-[110px] md:min-h-[135px] flex flex-col justify-center relative shadow-lg mb-2 z-20">
+        <span className="absolute top-1.5 left-3 text-[9px] md:text-[11px] uppercase tracking-wider text-hiroshima-400 font-typewriter font-bold">
+          Sub-titres // {subtitle.speaker}
+        </span>
+        <div className="space-y-2 text-center mt-3 px-2">
+          <p className="text-sm md:text-lg lg:text-xl font-typewriter text-cream-100 italic leading-relaxed font-semibold">
+            {subtitle.fr}
+          </p>
+          <p className="text-xs md:text-sm lg:text-base text-cream-300 font-sans tracking-wide">
+            {subtitle.es}
+          </p>
         </div>
       </div>
+
     </main>
   );
 }

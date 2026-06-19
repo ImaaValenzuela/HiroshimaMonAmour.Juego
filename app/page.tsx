@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 // Image mapping with metadata representing key moments of the film
 interface SceneInfo {
@@ -116,13 +116,14 @@ export default function Home() {
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // General audio synthesizer helper using Web Audio API
-  const initAudio = () => {
+  const initAudio = useCallback(() => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      audioContextRef.current = new AudioContextClass();
     }
-  };
+  }, []);
 
-  const playSynthSound = (type: "click" | "match" | "error" | "win" | "countdown") => {
+  const playSynthSound = useCallback((type: "click" | "match" | "error" | "win" | "countdown") => {
     if (!audioEnabled) return;
     initAudio();
     const ctx = audioContextRef.current;
@@ -227,7 +228,7 @@ export default function Home() {
         osc.stop(now + 2.0);
       });
     }
-  };
+  }, [audioEnabled, initAudio]);
 
   // Initialize and shuffle cards
   const initializeGame = () => {
@@ -296,7 +297,7 @@ export default function Home() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [gameState]);
+  }, [gameState, playSynthSound]);
 
   // Start game timer
   useEffect(() => {
@@ -329,7 +330,7 @@ export default function Home() {
         });
       }, 1200);
     }
-  }, [matches, gameState]);
+  }, [matches, gameState, playSynthSound]);
 
   // Handle Card Clicking
   const handleCardClick = (index: number) => {
